@@ -1,0 +1,108 @@
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║ ~/bash_cmd -- Function to store and run commands from file                 ║
+# ║ https://github.com/nicedreams/bash_cmd                                     ║
+# ║ -------------------------------------------------------------------------- ║
+# ║ Usage: Source this file inside your ~/.bashrc -- Use 'cmd' to run function ║
+# ║ -------------------------------------------------------------------------- ║
+# ║ This program is free software: you can redistribute it and/or modify       ║
+# ║ it under the terms of the GNU General Public License as published by       ║
+# ║ the Free Software Foundation, either version 3 of the License, or          ║
+# ║ (at your option) any later version.                                        ║
+# ║                                                                            ║
+# ║ This program is distributed in the hope that it will be useful,            ║
+# ║ but WITHOUT ANY WARRANTY; without even the implied warranty of             ║
+# ║ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              ║
+# ║ GNU General Public License for more details.                               ║
+# ║                                                                            ║
+# ║ You should have received a copy of the GNU General Public License          ║
+# ║ along with this program.  If not, see <https://www.gnu.org/licenses/>.     ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+# Version 2021-04-04
+
+export CMDFILE="${HOME}/.cmdnotes"
+
+cmd() {
+  local fzf_options="--height 50% --reverse --exact"
+  local help="%s
+Store and run commands from file: [${CMDFILE##*/}]
+
+Usage:
+  cmd\t\t\t:displays stored commands by number
+    NUM\t\t\t:run line number as command
+    -f |--fzf\t\t:run line as command (fzf)
+    -fa|--fzf-add\t:add line from history to cmd file (fzf)
+    -n |--numbers\t:displays stored commands by number
+    -a |--add-last\t:add last command retaining double/single quotes
+    -e |--edit\t\t:edit command file
+    -d |--delete #\t:delete command by line number
+    -b |--backup\t:backup command file with timestamp
+    -dd\t\t\t:delete blank lines from command file
+    --clear\t\t:clear command file contents
+    -c |--change PATH\t:change PATH to a different command file
+    -c |--change\t:set PATH to default command file
+    -h |--help\t\t:this usage
+  Current cmd PATH:\t${CMDFILE}\n\n"
+
+  if [[ ! -e "${CMDFILE}" ]]; then touch "${CMDFILE}"; fi
+  case "$1" in
+    [1-9]*)
+      line=$(sed -n "${1}"p "${CMDFILE}")
+      eval "${line}"
+    ;;
+    -f|--fzf)
+      if [[ ! $(command -v fzf) ]]; then printf "Fzf not found and required for this option!"; fi
+      runcmd=$(fzf \
+        --header="<enter> Run line as command | <ctrl-n> Xclip line to clipboard" \
+        --bind="ctrl-n:execute(printf '%s' "{}" | xclip -selection clipboard | printf '%s \n' )" \
+        ${fzf_options} \
+        < "${CMDFILE}")
+      eval "${runcmd}"
+    ;;
+    -fa|--fzf-add)
+      if [[ ! $(command -v fzf) ]]; then printf "Fzf not found and required for this option!"; fi
+      local histcmd=$(fc -l -n 1 | sed 's/^\s*//' | \
+      fzf \
+        --header="<enter> Add line from history to cmd" \
+        ${fzf_options})
+      if [[ "${histcmd}" ]]; then printf '%s \n' "${histcmd}" >> "${CMDFILE}"; fi
+    ;;
+    -n|--number|--numbers)
+      cat -n "${CMDFILE}"
+    ;;
+    --clear)
+      read -r -p "Press Enter to clear/delete ${CMDFILE##*/} or CTRL+C to cancel: "
+      > "${CMDFILE}" && printf "%sCleared ${CMDFILE}\n"
+    ;;
+    -a|--add-last)
+      lastcmd=$(fc -ln | tail -2 | head -1)
+      printf '%s \n' "${lastcmd#"${lastcmd%%[![:space:]]*}"}" >> "${CMDFILE}" && printf "%sAdded last command to ${CMDFILE##*/}\n" || printf "An error happened!\n"
+    ;;
+    -d|--delete)
+      if [[ -z "${2}" ]]; then
+        printf "No input entered\n"
+      else sed -i "${2}d" "${CMDFILE}"
+        printf "%sRemoved line ${2} from ${CMDFILE##*/}\n"
+      fi
+    ;;
+    -dd|--delete-double)
+      #sed '$!N; /^\(.*\)\n\1$/!P; D' "${CMDFILE}"
+      sed -i '/^ *$/d' "${CMDFILE}"
+      printf "%sDeleted blank lines from ${CMDFILE##*/}\n"
+    ;;
+    -b|--backup)
+      cp "${CMDFILE}" "${CMDFILE}"-"$(printf '%(%Y-%m-%d_%H.%M.%S)T' -1)"
+      printf "%sCreated backup copy of ${CMDFILE##*/}\n"
+    ;;
+    -c|--change)
+      if [[ -z "$2" ]]; then
+        export CMDFILE="${HOME}/.cmdnotes"
+      else
+        export CMDFILE="$2"
+      fi
+      printf "%sChanged CMDFILE path to: ${CMDFILE}\n"
+    ;;
+    -e|--edit) "${EDITOR}" "${CMDFILE}" ;;
+    -h|--help) printf "${help}" ;;
+    *) if [[ -z "$1" ]]; then cat -n "${CMDFILE}"; else printf '%s \n' "$*" >> "${CMDFILE}"; fi ;;
+  esac
+}
