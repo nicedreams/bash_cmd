@@ -28,6 +28,7 @@ Store and run commands from file: [${CMDFILE##*/}]
 
 Usage:
   cmd\t\t\t:displays stored commands by number
+    Text or Command\t:any text after cmd will be added to file
     NUM\t\t\t:run line number as command
     -f |--fzf\t\t:run line as command (fzf)
     -fa|--fzf-add\t:add line from history to cmd file (fzf)
