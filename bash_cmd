@@ -55,8 +55,8 @@ Usage:
         printf "Fzf not found and required for this option!"
       else
         runcmd=$(fzf \
-          --header="<enter> Run line as command | <ctrl-n> Xclip line to clipboard" \
-          --bind="ctrl-n:execute(printf '%s' "{}" | xclip -selection clipboard | printf '%s \n' )" \
+          --header="<enter> Run line as command | <ctrl-y> Xclip line to clipboard" \
+          --bind="ctrl-y:execute(printf '%s' "{}" | xclip -selection clipboard | printf '%s \n' )" \
           ${fzf_options} < "${CMDFILE}")
         eval "${runcmd}"
       fi
