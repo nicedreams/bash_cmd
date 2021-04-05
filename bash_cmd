@@ -51,20 +51,22 @@ Usage:
       eval "${line}"
     ;;
     -f|--fzf)
-      if [[ ! $(command -v fzf) ]]; then printf "Fzf not found and required for this option!"; fi
-      runcmd=$(fzf \
-        --header="<enter> Run line as command | <ctrl-n> Xclip line to clipboard" \
-        --bind="ctrl-n:execute(printf '%s' "{}" | xclip -selection clipboard | printf '%s \n' )" \
-        ${fzf_options} \
-        < "${CMDFILE}")
-      eval "${runcmd}"
+      if [[ ! $(command -v fzf) ]]; then
+        printf "Fzf not found and required for this option!"
+      else
+        runcmd=$(fzf \
+          --header="<enter> Run line as command | <ctrl-n> Xclip line to clipboard" \
+          --bind="ctrl-n:execute(printf '%s' "{}" | xclip -selection clipboard | printf '%s \n' )" \
+          ${fzf_options} < "${CMDFILE}")
+        eval "${runcmd}"
+      fi
     ;;
     -fa|--fzf-add)
-      if [[ ! $(command -v fzf) ]]; then printf "Fzf not found and required for this option!"; fi
-      local histcmd=$(fc -l -n 1 | sed 's/^\s*//' | \
-      fzf \
-        --header="<enter> Add line from history to cmd" \
-        ${fzf_options})
+      if [[ ! $(command -v fzf) ]]; then
+        printf "Fzf not found and required for this option!"
+      else
+        local histcmd=$(fc -l -n 1 | tail -n1000 | sed 's/^\s*//' | fzf --header="<enter> Add line from history to cmd" ${fzf_options})
+      fi
       if [[ "${histcmd}" ]]; then printf '%s \n' "${histcmd}" >> "${CMDFILE}"; fi
     ;;
     -n|--number|--numbers)
