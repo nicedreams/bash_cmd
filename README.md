@@ -37,11 +37,51 @@ cmd                   :displays stored commands by number
   -h |--help          :this usage
 ```
 
-### Example
+### Examples
 
-~/.cmdnotes
+Commands
 
 ```
+# List stored commands by number
+cmd
+cmd -n
+cmd --number
+
+# List stored commands using fzf
+cmd -f
+cmd --fzf
+
+# Add new command or note (anything entered after cmd is added)
+cmd ln -s /home/user/some/folder/file /home/user/file
+cmd echo "My Text Here"
+cmd # Comment or not if recalled by number won't error #
+
+# Add command from history
+cmd -fa
+cmd --fzf-add
+
+# Add last command ran from shell
+cmd -a
+cmd --add
+
+# Delete command from list by number
+cmd -d 8
+cmd --delete 8
+
+# Edit cmd file (~/.cmdnotes)
+cmd -e
+cmd --edit
+
+# Use a different cmd file
+cmd -c /home/user/myproject.cmd
+cmd --change /home/user/myproject.cmd
+cmd -c /home/user/anotherfile
+```
+
+~/.cmdnotes file contents
+
+```
+echo My Text Here
 nmap -p 22 --open -sV 192.168.2.0/24 > ~/sshservers.txt
 sudo openvpn --pull-filter ignore redirect-gateway --config myfile.ovpn
 sudo journalctl -r -p emerg -p alert -p crit -p err
