@@ -17,7 +17,7 @@
 # ║ You should have received a copy of the GNU General Public License          ║
 # ║ along with this program.  If not, see <https://www.gnu.org/licenses/>.     ║
 # ╚════════════════════════════════════════════════════════════════════════════╝
-# Version 2021-04-04
+# Version 2021-04-13
 
 export CMDFILE="${HOME}/.cmdnotes"
 
@@ -33,14 +33,15 @@ Usage:
     -f |--fzf\t\t:run line as command (fzf)
     -fa|--fzf-add\t:add line from history to cmd file (fzf)
     -n |--numbers\t:displays stored commands by number
+    -c |--copy\t\t:copy line number to clipboard (xclip)
     -a |--add-last\t:add last command retaining double/single quotes
     -e |--edit\t\t:edit command file
     -d |--delete #\t:delete command by line number
     -b |--backup\t:backup command file with timestamp
     -dd\t\t\t:delete blank lines from command file
     --clear\t\t:clear command file contents
-    -c |--change PATH\t:change PATH to a different command file
-    -c |--change\t:set PATH to default command file
+    --change PATH\t:change PATH to a different command file
+    --change\t\t:set PATH to default command file
     -h |--help\t\t:this usage
   Current cmd PATH:\t${CMDFILE}\n\n"
 
@@ -49,6 +50,10 @@ Usage:
     [1-9]*)
       line=$(sed -n "${1}"p "${CMDFILE}")
       eval "${line}"
+    ;;
+    -c|--copy)
+      line=$(sed -n "${2}"p "${CMDFILE}")
+      printf '%s' "${line}" | xclip -selection clipboard | printf '%s \n' && printf '%s \n' "Line ${2} copied to clipboard (xclip)" || printf '%s \n' "Issue when copying to clipboard (xclip)"
     ;;
     -f|--fzf)
       if [[ ! $(command -v fzf) ]]; then
@@ -72,10 +77,6 @@ Usage:
     -n|--number|--numbers)
       cat -n "${CMDFILE}"
     ;;
-    --clear)
-      read -r -p "Press Enter to clear/delete ${CMDFILE##*/} or CTRL+C to cancel: "
-      > "${CMDFILE}" && printf "%sCleared ${CMDFILE}\n"
-    ;;
     -a|--add-last)
       lastcmd=$(fc -ln | tail -2 | head -1)
       printf '%s \n' "${lastcmd#"${lastcmd%%[![:space:]]*}"}" >> "${CMDFILE}" && printf "%sAdded last command to ${CMDFILE##*/}\n" || printf "An error happened!\n"
@@ -83,8 +84,8 @@ Usage:
     -d|--delete)
       if [[ -z "${2}" ]]; then
         printf "No input entered\n"
-      else sed -i "${2}d" "${CMDFILE}"
-        printf "%sRemoved line ${2} from ${CMDFILE##*/}\n"
+      else
+        sed -i "${2}d" "${CMDFILE}" && printf "%sRemoved line ${2} from ${CMDFILE##*/}\n" || printf "%sIssue removing line ${2} from ${CMDFILE##*/}\n"
       fi
     ;;
     -dd|--delete-double)
@@ -96,7 +97,11 @@ Usage:
       cp "${CMDFILE}" "${CMDFILE}"-"$(printf '%(%Y-%m-%d_%H.%M.%S)T' -1)"
       printf "%sCreated backup copy of ${CMDFILE##*/}\n"
     ;;
-    -c|--change)
+    --clear)
+      read -r -p "Press Enter to clear/delete ${CMDFILE##*/} or CTRL+C to cancel: "
+      > "${CMDFILE}" && printf "%sCleared ${CMDFILE}\n"
+    ;;
+    --change)
       if [[ -z "$2" ]]; then
         export CMDFILE="${HOME}/.cmdnotes"
       else
