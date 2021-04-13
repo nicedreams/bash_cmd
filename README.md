@@ -25,6 +25,7 @@ cmd                   :displays stored commands by number
   NUM                 :run line number as command
   -f |--fzf           :run line as command (fzf)
   -fa|--fzf-add       :add line from history to cmd file (fzf)
+  -c |--copy          :copy line number to clipboard (xclip)
   -n |--numbers       :displays stored commands by number
   -a |--add-last      :add last command retaining double/single quotes
   -e |--edit          :edit command file
@@ -32,8 +33,8 @@ cmd                   :displays stored commands by number
   -b |--backup        :backup command file with timestamp
   -dd                 :delete blank lines from command file
   --clear             :clear command file contents
-  -c |--change PATH   :change PATH to a different command file
-  -c |--change        :set PATH to default command file
+  --change PATH       :change PATH to a different command file
+  --change            :set PATH to default command file
   -h |--help          :this usage
 ```
 
