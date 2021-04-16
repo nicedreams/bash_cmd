@@ -17,34 +17,12 @@
 # ║ You should have received a copy of the GNU General Public License          ║
 # ║ along with this program.  If not, see <https://www.gnu.org/licenses/>.     ║
 # ╚════════════════════════════════════════════════════════════════════════════╝
-# Version 2021-04-13
+# Version 2021-04-16
 
 export CMDFILE="${HOME}/.cmdnotes"
 
 cmd() {
   local fzf_options="--height 50% --reverse --exact"
-  local help="%s
-Store and run commands from file: [${CMDFILE##*/}]
-
-Usage:
-  cmd\t\t\t:displays stored commands by number
-    Text or Command\t:any text after cmd will be added to file
-    NUM\t\t\t:run line number as command
-    -f |--fzf\t\t:run line as command (fzf)
-    -fa|--fzf-add\t:add line from history to cmd file (fzf)
-    -n |--numbers\t:displays stored commands by number
-    -c |--copy\t\t:copy line number to clipboard (xclip)
-    -a |--add-last\t:add last command retaining double/single quotes
-    -e |--edit\t\t:edit command file
-    -d |--delete #\t:delete command by line number
-    -b |--backup\t:backup command file with timestamp
-    -dd\t\t\t:delete blank lines from command file
-    --clear\t\t:clear command file contents
-    --change PATH\t:change PATH to a different command file
-    --change\t\t:set PATH to default command file
-    -h |--help\t\t:this usage
-  Current cmd PATH:\t${CMDFILE}\n\n"
-
   if [[ ! -e "${CMDFILE}" ]]; then touch "${CMDFILE}"; fi
   case "$1" in
     [1-9]*)
@@ -52,8 +30,12 @@ Usage:
       eval "${line}"
     ;;
     -c|--copy)
-      line=$(sed -n "${2}"p "${CMDFILE}")
-      printf '%s' "${line}" | xclip -selection clipboard | printf '%s \n' && printf '%s \n' "Line ${2} copied to clipboard (xclip)" || printf '%s \n' "Issue when copying to clipboard (xclip)"
+      if [[ "${2}" ]]; then
+        line=$(sed -n "${2}"p "${CMDFILE}")
+        printf '%s' "${line}" | xclip -selection clipboard | printf '%s \n' && printf '%s \n' "Line ${2} copied to clipboard (xclip)" || printf '%s \n' "Issue when copying to clipboard (xclip)"
+      else
+        printf '%s \n' "Nothing entered to copy"
+      fi
     ;;
     -f|--fzf)
       if [[ ! $(command -v fzf) ]]; then
@@ -61,7 +43,7 @@ Usage:
       else
         runcmd=$(fzf \
           --header="<enter> Run line as command | <ctrl-y> Xclip line to clipboard" \
-          --bind="ctrl-y:execute(printf '%s' "{}" | xclip -selection clipboard | printf '%s \n' )" \
+          --bind="ctrl-y:execute-silent(printf '%s' "{+}" | xclip -selection clipboard | printf '%s \n')+abort" \
           ${fzf_options} < "${CMDFILE}")
         eval "${runcmd}"
       fi
@@ -74,43 +56,92 @@ Usage:
       fi
       if [[ "${histcmd}" ]]; then printf '%s \n' "${histcmd}" >> "${CMDFILE}"; fi
     ;;
+    -fd|--fzf-delete)
+      fzfline=( $(cat -n "${CMDFILE}" | sed -e 's/^[ \t]*//' | fzf --header="<enter> Delete selected line" ${fzf_options}) )
+      if [[ "${fzfline}" ]]; then sed -i "${fzfline[0]}"d "${CMDFILE}" && printf '%s \n' "Removed line: ${fzfline[0]} from: ${CMDFILE}" || printf '%s \n' "Issue removing line: ${fzfline[0]} from: ${CMDFILE}"; fi
+    ;;
     -n|--number|--numbers)
-      cat -n "${CMDFILE}"
+      local number=0
+      while IFS='' read -r LINE || [ -n "${LINE}" ]; do
+        ((number++))
+        printf '%+3s %s\n' "${number}": "${LINE}"
+      done < "${CMDFILE}"
+    ;;
+    -al|--alias)
+      if [[ ! "${2}" ]]; then printf '%s \n' "No line number entered"; return; fi
+      read -p "Enter name of alias to create: " alias_name
+      if [[ ! "${alias_name}" ]]; then
+        printf '%s \n' "No name entered"
+      else
+        getcmd=$(sed -n ${2}p "${CMDFILE}")
+        alias "${alias_name}"="${getcmd}"
+      fi
     ;;
     -a|--add-last)
       lastcmd=$(fc -ln | tail -2 | head -1)
-      printf '%s \n' "${lastcmd#"${lastcmd%%[![:space:]]*}"}" >> "${CMDFILE}" && printf "%sAdded last command to ${CMDFILE##*/}\n" || printf "An error happened!\n"
+      printf '%s \n' "${lastcmd#"${lastcmd%%[![:space:]]*}"}" >> "${CMDFILE}" && printf '%s \n' "Added last command to ${CMDFILE##*/}" || printf '%s \n' "An error happened!"
     ;;
     -d|--delete)
       if [[ -z "${2}" ]]; then
         printf "No input entered\n"
       else
-        sed -i "${2}d" "${CMDFILE}" && printf "%sRemoved line ${2} from ${CMDFILE##*/}\n" || printf "%sIssue removing line ${2} from ${CMDFILE##*/}\n"
+        sed -i "${2}"d "${CMDFILE}" && printf "%sRemoved line ${2} from ${CMDFILE##*/}\n" || printf "%sIssue removing line ${2} from ${CMDFILE##*/}\n"
       fi
     ;;
     -dd|--delete-double)
       #sed '$!N; /^\(.*\)\n\1$/!P; D' "${CMDFILE}"
       sed -i '/^ *$/d' "${CMDFILE}"
-      printf "%sDeleted blank lines from ${CMDFILE##*/}\n"
+      printf '%s \n' "Deleted blank lines from ${CMDFILE##*/}"
     ;;
     -b|--backup)
-      cp "${CMDFILE}" "${CMDFILE}"-"$(printf '%(%Y-%m-%d_%H.%M.%S)T' -1)"
-      printf "%sCreated backup copy of ${CMDFILE##*/}\n"
+      cp "${CMDFILE}" "${CMDFILE}"-"$(printf '%(%Y-%m-%d_%H.%M.%S)T' -1)" && printf "%sCreated backup of ${CMDFILE##*/}\n" || printf "%sIssue creating backup copy\n"
     ;;
     --clear)
       read -r -p "Press Enter to clear/delete ${CMDFILE##*/} or CTRL+C to cancel: "
-      > "${CMDFILE}" && printf "%sCleared ${CMDFILE}\n"
+      > "${CMDFILE}" && printf '%s \n' "Cleared ${CMDFILE}"
     ;;
     --change)
       if [[ -z "$2" ]]; then
-        export CMDFILE="${HOME}/.cmdnotes"
+        export CMDFILE="${HOME}/.cmdnotes" && printf '%s \n' "Changed to: ${HOME}/.cmdnotes"
       else
-        export CMDFILE="$2"
+        export CMDFILE="${2}" && printf '%s \n' "Changed to: ${2}"
       fi
       printf "%sChanged CMDFILE path to: ${CMDFILE}\n"
     ;;
     -e|--edit) "${EDITOR}" "${CMDFILE}" ;;
-    -h|--help) printf "${help}" ;;
-    *) if [[ -z "$1" ]]; then cat -n "${CMDFILE}"; else printf '%s \n' "$*" >> "${CMDFILE}"; fi ;;
+    -h|--help)
+      printf "Store and run commands from file: [${CMDFILE##*/}]\n\n"
+      printf "Usage:\n"
+      printf "  cmd\t\t\t:displays stored commands by number\n"
+      printf "    Text or Command\t:any text after cmd will be added to file\n"
+      printf "    NUM\t\t\t:run line number as command\n"
+      printf "    -f |--fzf\t\t:run line as command or copy to clipboard (fzf/xclip)\n"
+      printf "    -fa|--fzf-add\t:add line from history to cmd file (fzf)\n"
+      printf "    -fd|--fzf-delete\t:delete line from cmd file (fzf)\n"
+      printf "    -n |--numbers\t:displays stored commands by number\n"
+      printf "    -c |--copy\t\t:copy line number to clipboard (xclip)\n"
+      printf "    -a |--add-last\t:add last command retaining double/single quotes\n"
+      printf "    -al|--alias NUM\t:create named bash alias from command number\n"
+      printf "    -d |--delete #\t:delete command by line number\n"
+      printf "    -e |--edit\t\t:edit cmd file\n"
+      printf "    -b |--backup\t:backup command file with timestamp\n"
+      printf "    -dd\t\t\t:delete blank lines from command file\n"
+      printf "    --clear\t\t:clear command file contents\n"
+      printf "    --change PATH\t:change PATH to a different command file\n"
+      printf "    --change\t\t:set PATH to default command file\n"
+      printf "    -h |--help\t\t:this usage\n"
+      printf "  Current cmd PATH:\t${CMDFILE}\n\n"
+    ;;
+    *)
+      if [[ ! "$1" ]]; then
+        local number=0
+        while IFS='' read -r LINE || [ -n "${LINE}" ]; do
+          ((number++))
+          printf '%+3s %s\n' "${number}": "${LINE}"
+        done < "${CMDFILE}"
+      else
+        printf '%s \n' "$*" >> "${CMDFILE}"
+      fi
+    ;;
   esac
 }
