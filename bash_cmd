@@ -79,6 +79,16 @@ cmd() {
         alias "${alias_name}"="${getcmd}"
       fi
     ;;
+    -as|--alias-save)
+      if [[ ! "${2}" ]]; then printf '%s \n' "No line number entered"; return; fi
+      read -p "Enter name of alias to append to ~/.bash_aliases: " alias_name
+      if [[ ! "${alias_name}" ]]; then
+        printf '%s \n' "No name entered"
+      else
+        getcmd=$(sed -n ${2}p "${CMDFILE}")
+        printf '%s \n' "alias ${alias_name}='${getcmd}'" >> "${HOME}"/.bash_aliases
+      fi
+    ;;
     -l|--last)
       lastcmd=$(fc -ln | tail -2 | head -1)
       printf '%s \n' "${lastcmd#"${lastcmd%%[![:space:]]*}"}" >> "${CMDFILE}" && printf '%s \n' "Added last command to ${CMDFILE##*/}" || printf '%s \n' "An error happened!"
