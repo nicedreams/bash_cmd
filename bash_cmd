@@ -102,11 +102,13 @@ cmd() {
     ;;
     -dd|--delete-double)
       #sed '$!N; /^\(.*\)\n\1$/!P; D' "${CMDFILE}"
-      sed -i '/^ *$/d' "${CMDFILE}"
-      printf '%s \n' "Deleted blank lines from ${CMDFILE##*/}"
+      sed -i '/^ *$/d' "${CMDFILE}" || printf '%s \n' "Issue removing blank lines with sed"
+      sed -i 's/[ \t]*$//' "${CMDFILE}" || printf '%s \n' "Issue removing trailing spaces with sed"
+      printf '%s \n' "Deleted blank lines and trailing spaces from ${CMDFILE##*/}"
     ;;
     -b|--backup)
-      cp "${CMDFILE}" "${CMDFILE}"-"$(printf '%(%Y-%m-%d_%H.%M.%S)T' -1)" && printf "%sCreated backup of ${CMDFILE##*/}\n" || printf "%sIssue creating backup copy\n"
+      local date_time="$(printf '%(%Y-%m-%d_%H.%M.%S)T' -1)"
+      cp "${CMDFILE}" "${CMDFILE}"-"${date_time}" && printf "%sCreated backup of ${CMDFILE##*/} to ${CMDFILE}-${date_time}\n" || printf "%sIssue creating backup copy\n"
     ;;
     --clear)
       read -r -p "Press Enter to clear/delete ${CMDFILE##*/} or CTRL+C to cancel: "
@@ -126,21 +128,22 @@ cmd() {
       printf "Usage:\n"
       printf "  cmd\t\t\t:displays stored commands by number\n"
       printf "    Text or Command\t:any text after cmd will be added to file\n"
-      printf "    NUM\t\t\t:run line number as command\n"
+      printf "    ##\t\t\t:run line number as command\n"
       printf "    -f |--fzf\t\t:run line as command or copy to clipboard (fzf/xclip)\n"
       printf "    -fa|--fzf-add\t:add line from history to cmd file (fzf)\n"
       printf "    -fd|--fzf-delete\t:delete line from cmd file (fzf)\n"
       printf "    -n |--numbers\t:displays stored commands by number\n"
       printf "    -c |--copy\t\t:copy line number to clipboard (xclip)\n"
       printf "    -l |--last\t\t:add last command retaining double/single quotes\n"
-      printf "    -a |--alias NUM\t:create named bash alias from command number\n"
+      printf "    -a |--alias #\t:create named bash alias from cmd number\n"
+      printf "    -as|--alias-save #\t:save named bash alias in ~/.bash_aliases\n"
       printf "    -d |--delete #\t:delete command by line number\n"
       printf "    -e |--edit\t\t:edit cmd file\n"
-      printf "    -b |--backup\t:backup command file with timestamp\n"
-      printf "    -dd\t\t\t:delete blank lines from command file\n"
-      printf "    --clear\t\t:clear command file contents\n"
-      printf "    --change PATH\t:change PATH to a different command file\n"
-      printf "    --change\t\t:set PATH to default command file\n"
+      printf "    -b |--backup\t:backup cmd file with timestamp\n"
+      printf "    -dd\t\t\t:delete blank lines and trailing spaces from cmd file\n"
+      printf "    --clear\t\t:clear cmd file contents\n"
+      printf "    --change PATH\t:change PATH to a different cmd file\n"
+      printf "    --change\t\t:set PATH to default cmd file\n"
       printf "    -h |--help\t\t:this usage\n"
       printf "  Current cmd PATH:\t${CMDFILE}\n\n"
     ;;
