@@ -22,12 +22,13 @@
 export CMDFILE="${HOME}/.cmdnotes"
 
 cmd() {
-  local fzf_options="--height 50% --reverse --exact"
+  local fzf_options="--height 50% --reverse --exact --preview-window=hidden --multi=0"
   if [[ ! -e "${CMDFILE}" ]]; then touch "${CMDFILE}"; fi
   case "$1" in
     [1-9]*)
       line=$(sed -n "${1}"p "${CMDFILE}")
-      eval "${line}"
+      #eval "${line}"
+      bash -c "${line}"
     ;;
     -c|--copy)
       if [[ "${2}" ]]; then
@@ -45,7 +46,8 @@ cmd() {
           --header="<enter> Run line as command | <ctrl-y> Xclip line to clipboard" \
           --bind="ctrl-y:execute-silent(printf '%s' "{+}" | xclip -selection clipboard | printf '%s \n')+abort" \
           ${fzf_options} < "${CMDFILE}")
-        eval "${runcmd}"
+        #eval "${runcmd}"
+        bash -c "${runcmd}"
       fi
     ;;
     -fa|--fzf-add)
@@ -67,7 +69,7 @@ cmd() {
         printf '%+3s %s\n' "${number}": "${LINE}"
       done < "${CMDFILE}"
     ;;
-    -al|--alias)
+    -a|--alias)
       if [[ ! "${2}" ]]; then printf '%s \n' "No line number entered"; return; fi
       read -p "Enter name of alias to create: " alias_name
       if [[ ! "${alias_name}" ]]; then
@@ -77,7 +79,7 @@ cmd() {
         alias "${alias_name}"="${getcmd}"
       fi
     ;;
-    -a|--add-last)
+    -l|--last)
       lastcmd=$(fc -ln | tail -2 | head -1)
       printf '%s \n' "${lastcmd#"${lastcmd%%[![:space:]]*}"}" >> "${CMDFILE}" && printf '%s \n' "Added last command to ${CMDFILE##*/}" || printf '%s \n' "An error happened!"
     ;;
@@ -120,8 +122,8 @@ cmd() {
       printf "    -fd|--fzf-delete\t:delete line from cmd file (fzf)\n"
       printf "    -n |--numbers\t:displays stored commands by number\n"
       printf "    -c |--copy\t\t:copy line number to clipboard (xclip)\n"
-      printf "    -a |--add-last\t:add last command retaining double/single quotes\n"
-      printf "    -al|--alias NUM\t:create named bash alias from command number\n"
+      printf "    -l |--last\t\t:add last command retaining double/single quotes\n"
+      printf "    -a |--alias NUM\t:create named bash alias from command number\n"
       printf "    -d |--delete #\t:delete command by line number\n"
       printf "    -e |--edit\t\t:edit cmd file\n"
       printf "    -b |--backup\t:backup command file with timestamp\n"
