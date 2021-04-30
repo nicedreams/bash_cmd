@@ -20,22 +20,31 @@ echo "source ~/.bash_cmd" >> ~/.bashrc
 ### Usage
 
 ```
-cmd                   :displays stored commands by number
-  Text or Command     :any text after cmd will be added to file
-  NUM                 :run line number as command
-  -f |--fzf           :run line as command (fzf)
-  -fa|--fzf-add       :add line from history to cmd file (fzf)
-  -c |--copy          :copy line number to clipboard (xclip)
-  -n |--numbers       :displays stored commands by number
-  -a |--add-last      :add last command retaining double/single quotes
-  -e |--edit          :edit command file
-  -d |--delete #      :delete command by line number
-  -b |--backup        :backup command file with timestamp
-  -dd                 :delete blank lines from command file
-  --clear             :clear command file contents
-  --change PATH       :change PATH to a different command file
-  --change            :set PATH to default command file
-  -h |--help          :this usage
+Store and run commands from file:
+
+Usage:
+  cmd <option>          :Use default file as source
+  cmd <file> <option>   :Use another file as source
+
+  cmd                   :displays stored commands by number
+    ##                  :run line number as command
+    -f |--fzf           :run line as command or copy to clipboard (fzf/xclip)
+    -fa|--fzf-add       :add line from history to cmd file (fzf)
+    -fd|--fzf-delete    :delete line from cmd file (fzf)
+    -n |--numbers       :displays stored commands by number
+    -c |--copy          :copy line number to clipboard (xclip)
+    -l |--last          :add last command retaining double/single quotes
+    -a |--alias #       :create named bash alias from cmd number
+    -as|--alias-save #  :save named bash alias in ~/.bash_aliases
+    -d |--delete #      :delete command by line number
+    -e |--edit          :edit cmd file
+    -b |--backup        :backup cmd file with timestamp
+    -dd                 :delete blank lines and trailing spaces from cmd file
+    --clear             :clear cmd file contents
+    -h |--help          :this usage
+
+Default: [/home/ken/.cmdnotes]
+ Source: [/home/ken/.cmdnotes]
 ```
 
 ### Examples
@@ -52,10 +61,10 @@ cmd --number
 cmd -f
 cmd --fzf
 
-# Add new command or note (anything entered after cmd is added)
-cmd ln -s /home/user/some/folder/file /home/user/file
-cmd echo "My Text Here"
-cmd # Comment or not if recalled by number won't error #
+# Use another file that has commands as source
+cmd ~/nmapcmd
+cmd ~/nmapcmd -f
+cmd ~/nmapcmd -d 2
 
 # Add command from history
 cmd -fa
@@ -74,9 +83,8 @@ cmd -e
 cmd --edit
 
 # Use a different cmd file
-cmd -c /home/user/myproject.cmd
-cmd --change /home/user/myproject.cmd
-cmd -c /home/user/anotherfile
+cmd -as 3
+cmd --alias-save 3
 ```
 
 ~/.cmdnotes file contents
@@ -94,4 +102,12 @@ vim /etc/systemd/system/myproject.service
 sshfs user@server:/home/user/ /home/user/sshfs/
 ssh user@192.168.2.31   # sambadc1 (debtest)
 ssh user@192.168.2.32   # sambafs1 (debtest)
+```
+
+~/.bash Alias Examples
+
+```
+alias cmdf='cmd -f'                     # Start cmd with fzf option
+alias cmd-nmap='cmd ~/cmd/nmap'         # Use file with list of nmap commands
+alias cmd-sshfs='cmd ~/cmd/sshfs -f'    # Use file with list of sshfs commands with fzf
 ```
