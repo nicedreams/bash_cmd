@@ -22,7 +22,6 @@
 # ║ along with this program.  If not, see <https://www.gnu.org/licenses/>.     ║
 # ╚════════════════════════════════════════════════════════════════════════════╝
 # Version 2021-04-30
-
 # Set CMDFILE variable if not already set from environment
 if [[ ! "${CMDFILE}" ]]; then export CMDFILE="${HOME}/.cmdnotes"; fi
 
@@ -33,15 +32,16 @@ usage() {
   printf "  cmd <option>\t\t:Use default file as source\n"
   printf "  cmd <file> <option>\t:Use another file as source\n\n"
   printf "  cmd\t\t\t:displays stored commands by number\n"
-  printf "    ##\t\t\t:run line number as command\n"
+  printf "    #\t\t\t:run line number as command\n"
+  printf "    -a |--add \'command\'\t:add \"command in double or single quotes\" to cmd file\n"
   printf "    -f |--fzf\t\t:run line as command or copy to clipboard (fzf/xclip)\n"
   printf "    -fa|--fzf-add\t:add line from history to cmd file (fzf)\n"
   printf "    -fd|--fzf-delete\t:delete line from cmd file (fzf)\n"
   printf "    -n |--numbers\t:displays stored commands by number\n"
   printf "    -c |--copy\t\t:copy line number to clipboard (xclip)\n"
   printf "    -l |--last\t\t:add last command retaining double/single quotes\n"
-  printf "    -a |--alias #\t:create named bash alias from cmd number\n"
-  printf "    -as|--alias-save #\t:save named bash alias in ~/.bash_aliases\n"
+  printf "    --alias #\t\t:create named bash alias from cmd number\n"
+  printf "    --alias-save #\t:save named bash alias in ~/.bash_aliases\n"
   printf "    -d |--delete #\t:delete command by line number\n"
   printf "    -e |--edit\t\t:edit cmd file\n"
   printf "    -b |--backup\t:backup cmd file with timestamp\n"
@@ -56,7 +56,7 @@ usage() {
 run_command() {
   line=$(sed -n "${case_option}"p "${cmdfile}")
   #eval "${line}"
-  bash -c "${line}"
+  bash -c "${line[@]}"
 }
 
 # Display each line listing by number
@@ -78,6 +78,11 @@ option_copy() {
   fi
 }
 
+# Add/Append
+option_add_command() {
+  printf '%s\n' "${cmd_option[*]}" >> "${cmdfile}" && printf '%s\n' "Added last command to: ${cmdfile##*/}" || printf '%s\n' "Error adding command to: ${cmdfile##*/}"
+}
+
 # Display commands in file via fzf
 option_fzf() {
   if [[ ! $(command -v fzf) ]]; then
@@ -88,7 +93,7 @@ option_fzf() {
       --bind="ctrl-y:execute-silent(printf '%s' "{+}" | xclip -selection clipboard | printf '%s\n')+abort" \
       ${fzf_options} < "${cmdfile}")
     #eval "${runcmd}"
-    bash -c "${runcmd}"
+    bash -c "${runcmd[@]}"
   fi
 }
 
@@ -193,8 +198,9 @@ cmd() {
     -fa|--fzf-add) option_fzf_add ;;
     -fd|--fzf-delete) option_fzf_delete ;;
     -n|--number|--numbers) number_file_loop ;;
-    -a|--alias) option_alias ;;
-    -as|--alias-save) option_alias_save ;;
+    -a|--add) option_add_command ;;
+    --alias) option_alias ;;
+    --alias-save) option_alias_save ;;
     -l|--last) option_last ;;
     -d|--delete|-rm) option_delete ;;
     -dd|--delete-double) option_delete_double ;;
