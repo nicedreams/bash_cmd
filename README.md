@@ -1,12 +1,10 @@
 # bash_cmd - Store and run commands from file
 
-------------------------------------------------------
-
 Function to be sourced from ~/.bashrc to manage commands for different projects or uses.
 
 ### Why
 
-I wanted a way to store and run frequently used or complex commands based on different projects or computers I'm on.  Don't want a bunch of aliases or modify a bunch of different files like ~/.ssh/config for things I want to keep simple and don't need permanent.  Commands stored in ~/.cmdnotes or any other file can be sync'd between computers.
+Wanted a way to store and run frequently used or complex commands based on different projects or computers I'm on.  Don't want a bunch of aliases or other configs for things I want to keep simple and don't need permanent.  Commands stored in ~/.cmdnotes or any other file can be sync'd between computers.
 
 ### Installation
 
@@ -43,13 +41,13 @@ Usage:
     --clear             :clear cmd file contents
     -h |--help          :this usage
 
-Default: [/home/ken/.cmdnotes]
- Source: [/home/ken/.cmdnotes]
+Default: [/home/user/.cmdnotes]
+ Source: [/home/user/.cmdnotes]
 ```
 
 ### Examples
 
-Commands
+#### Command examples
 
 ```
 # List stored commands by number
@@ -61,10 +59,10 @@ cmd --number
 cmd -f
 cmd --fzf
 
-# Use another file that has commands as source
+# Use another file as source
 cmd ~/nmapcmd
 cmd ~/nmapcmd -f
-cmd ~/nmapcmd -d 2
+cmd ~/cmds/sshfs -d 2
 
 # Add command from history
 cmd -fa
@@ -87,7 +85,7 @@ cmd -as 3
 cmd --alias-save 3
 ```
 
-~/.cmdnotes file contents
+#### ~/.cmdnotes file contents example
 
 ```
 echo My Text Here
@@ -104,7 +102,7 @@ ssh user@192.168.2.31   # sambadc1 (debtest)
 ssh user@192.168.2.32   # sambafs1 (debtest)
 ```
 
-~/.bash Alias Examples
+#### ~/.bash Alias examples
 
 ```
 alias cmdf='cmd -f'                     # Start cmd with fzf option
