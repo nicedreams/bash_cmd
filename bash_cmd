@@ -35,7 +35,7 @@ usage() {
   printf "    #\t\t\t:run line number as command\n"
   printf "    -a |--add \'command\'\t:add \"command in double or single quotes\" to cmd file\n"
   printf "    -f |--fzf\t\t:run line as command or copy to clipboard (fzf/xclip)\n"
-  printf "    -fa|--fzf-add\t:add line from history to cmd file (fzf)\n"
+  printf "    -fh|--fzf-history\t:add line from history to cmd file (fzf)\n"
   printf "    -fd|--fzf-delete\t:delete line from cmd file (fzf)\n"
   printf "    -n |--numbers\t:displays stored commands by number\n"
   printf "    -c |--copy\t\t:copy line number to clipboard (xclip)\n"
@@ -98,7 +98,7 @@ option_fzf() {
 }
 
 # Add command from history to file via fzf
-option_fzf_add() {
+option_fzf_add_history() {
   if [[ ! $(command -v fzf) ]]; then
     printf "Fzf not found and required for this option!"
   else
@@ -195,7 +195,7 @@ cmd() {
     [1-9]*) run_command ;;
     -c|--copy) option_copy ;;
     -f|--fzf) option_fzf ;;
-    -fa|--fzf-add) option_fzf_add ;;
+    -fh|--fzf-history) option_fzf_add ;;
     -fd|--fzf-delete) option_fzf_delete ;;
     -n|--number|--numbers) number_file_loop ;;
     -a|--add) option_add_command ;;
