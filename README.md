@@ -49,28 +49,29 @@ cmd                     :displays stored commands by number
   -  |--cmdlets         :List/Select available cmdlets (fzf) 
 
   -f |--fzf             :run line | copy to clipboard | delete line (fzf|xclip)
-
   -fh|--fzf-history     :add line from history (fzf|sourced)
+
   -hn|--history #       :add command from history number (sourced)
   -l |--last            :add last entered command from history (sourced)
 
   -a |--add 'command'   :add 'command' in "double" or 'single' quotes to cmd file
   -c |--copy #          :copy line number to clipboard (xclip)
+  -m |--move # <file>   :move line number to another or new cmdlets file
   -d |--delete #        :delete command by line number
 
-  -n |--note "text"     :add quoted "text" as note (prepend #DATE before entry) 
+      --note "text"     :add quoted "text" as note (prepend #DATE before entry) 
 
-     --numbers          :displays stored commands by number (same as no options)
+  -n |--numbers         :displays stored commands by number (same as no options)
 
   -e |--edit            :edit cmdlets file
   -b |--backup          :backup cmdlets file with timestamp
-  -dd|--delete-blank    :delete blank lines and trailing spaces from cmdlets file
+      --remove          :remove blank lines and trailing spaces from cmdlets file
       --clear           :clear cmdlets file contents
 
   -V |--version         :version information
   -h |--help            :this usage
 
-Using as standalone script vs sourced: [STATUS: standalone script]
+Using as standalone script vs sourced: [STATUS: sourced]
   Commands ran from cmdlets will use your current shell environment when sourced.
   History options will not work unless sourced.
   Uses 'bash -c' when standalone or 'eval' when sourced to run commands.
@@ -149,7 +150,7 @@ sshfs user@sambafs1:/home/user/ /home/user/sshfs/
 ```
 # Display stored commands by number
 cmd
-cmd --number
+cmd -n
 
 # Run command by number
 cmd 3
@@ -186,6 +187,12 @@ cmd ~/.cmdlets/vagrant -d 4
 cmd -e
 cmd --edit
 cmd ~/.cmdlets/samba -e
+
+# Move command from one cmdlet file to another
+cmd -m 4 .cmdlets/tools
+
+# Create a timestamp note
+cmd --note "Your note here"
 ```
 
 --------------------------------
@@ -193,8 +200,8 @@ cmd ~/.cmdlets/samba -e
 ### Alias examples
 
 # Start cmd with fzf (use cmd -n) to use default.
-alias cmd='cmd -f'
+`alias cmd='cmd -f'`
 
 # Add alias to start with `sar` commands.
-alias sarcmd='cmd ~/.cmdlets/sar'
+`alias sarcmd='cmd ~/.cmdlets/sar'`
 
