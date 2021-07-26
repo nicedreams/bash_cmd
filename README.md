@@ -199,9 +199,10 @@ cmd --note "Your note here"
 
 ### Alias examples
 
+```
 # Start cmd with fzf (use cmd -n) to use default.
-`alias cmd='cmd -f'`
+alias cmd='cmd -f'
 
 # Add alias to start with `sar` commands.
-`alias sarcmd='cmd ~/.cmdlets/sar'`
-
+alias sarcmd='cmd ~/.cmdlets/sar'
+```
